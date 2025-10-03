@@ -1,8 +1,25 @@
-const { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, delay } = require('@whiskeysockets/baileys')
-const QRCode = require('qrcode')
+const { default: makeWASocket, useMultiFileAuthState, makeCacheableSignalKeyStore } = require("@whiskeysockets/baileys")
 const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
+
+async function start() {
+    const { state, saveCreds } = await useMultiFileAuthState("session")
+    const sock = makeWASocket({
+        auth: state,
+        printQRInTerminal: false, // jangan QR
+    })
+
+    // Pairing code
+    if (!sock.authState.creds.registered) {
+        const code = await sock.requestPairingCode("628xxxxxx") // nomor WhatsApp kamu
+        console.log("Pairing Code:", code)
+    }
+
+    sock.ev.on("creds.update", saveCreds)
+}
+
+start()
 
 // File untuk menyimpan data
 const bannedFile = 'banned.json'
